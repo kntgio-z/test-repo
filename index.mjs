@@ -1,5 +1,8 @@
 import express from "express";
 import pg from "pg";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
 import {
   TralsePostgreSQL,
   extractRows,
@@ -9,6 +12,12 @@ import {
 const app = express();
 
 const port = process.env.PORT || 3000;
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Serve static files from the "public" directory
+app.use(express.static(join(__dirname, 'public')));
+
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,7 +29,7 @@ app.use(express.json());
 app.use(TralsePostgreSQL(pool, DBNAME));
 
 app.get("/hello", (req, res) => {
-  res.send("Hello, World!");
+  res.send({ message: "Hello, World!" });
 });
 
 app.get("/username/:id", async (req, res) => {
@@ -249,14 +258,11 @@ app.delete("/delete", async (req, res) => {
 
     if (result.rowCount === 0) {
       await transaction.rollback();
-      return res
-        .status(404)
-        .send({
-          error:
-            "Deletion unsuccessful. It is either caused by a non-existing id or wrong password.",
-        });
+      return res.status(404).send({
+        error:
+          "Deletion unsuccessful. It is either caused by a non-existing id or wrong password.",
+      });
     }
-
 
     await transaction.commit();
 
@@ -275,8 +281,6 @@ process.on("exit", async (code) => {
   console.log(`Exited with code ${code}`);
 });
 
-// app.listen(port, () => {
-//   console.log("Listening to port 3000");
-// });
+// app.listen(port, () => {console.log("mamamo");})
 
 export default app;
