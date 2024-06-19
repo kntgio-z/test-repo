@@ -1,128 +1,155 @@
 [
   {
-    "method": "GET",
-    "endpoint": "/hello",
-    "description": "Returns a message 'Hello, World!' as a test endpoint.",
-    "response": {
-      "message": "Hello, World!"
-    }
+      "group": "General",
+      "endpoints": [
+          {
+              "method": "GET",
+              "endpoint": "/hello",
+              "description": "Test endpoint for displaying 'Hello, World!'",
+              "response": {
+                  "message": "Hello, World!"
+              }
+          }
+      ]
   },
   {
-    "method": "GET",
-    "endpoint": "/username/:id",
-    "description": "Fetches the username corresponding to the provided id.",
-    "response": {
-      "username": "sampleUsername"
-    },
-    "errors": [
-      { "code": "400 Bad Request", "description": "Missing id." },
-      {
-        "code": "404 Not Found",
-        "description": "User with the provided id not found."
-      },
-      {
-        "code": "500 Internal Server Error",
-        "description": "Internal server error."
-      }
-    ]
+      "group": "User",
+      "endpoints": [
+          {
+              "method": "GET",
+              "endpoint": "/username/:id",
+              "description": "Fetches the username by id.",
+              "response": {
+                  "username": "sampleUsername"
+              },
+              "errors": [
+                  { "code": "400 Bad Request", "description": "Missing id." },
+                  {
+                      "code": "404 Not Found",
+                      "description": "User with given id not found."
+                  },
+                  {
+                      "code": "500 Internal Server Error",
+                      "description": "Internal server error"
+                  }
+              ]
+          },
+          {
+              "method": "POST",
+              "endpoint": "/new",
+              "description": "Creates a new user account. Returns an account id.",
+              "requestBody": {
+                  "username": "johndoe",
+                  "password": "password"
+              },
+              "response": {
+                  "id": 1
+              },
+              "errors": [
+                  {
+                      "code": "400 Bad Request",
+                      "description": "Missing username or password fields"
+                  },
+                  {
+                      "code": "409 Conflict",
+                      "description": "Username already exists."
+                  },
+                  {
+                      "code": "500 Internal Server Error",
+                      "description": "Internal server error"
+                  }
+              ]
+          },
+          {
+              "method": "PATCH",
+              "endpoint": "/edit",
+              "description": "Modifies an account. Both username and password are optional but the id is required. Returns a message 'OK' if success.",
+              "requestBody": {
+                  "id": 1,
+                  "username": "johndoe",
+                  "password": "johndoe69"
+              },
+              "response": "OK",
+              "errors": [
+                  {
+                      "code": "400 Bad Request",
+                      "description": "Missing id."
+                  },
+                  {
+                      "code": "404 Not Found",
+                      "description": "User with given id not found."
+                  },
+                  {
+                      "code": "409 Conflict",
+                      "description": "Given username already exists."
+                  },
+                  {
+                      "code": "409 Conflict",
+                      "description": "Given password already exists."
+                  },
+                  {
+                      "code": "500 Internal Server Error",
+                      "description": "Internal server error"
+                  }
+              ]
+          },
+          {
+              "method": "DELETE",
+              "endpoint": "/delete",
+              "description": "Deletes a user account. Sends a message 'OK' if success.",
+              "requestBody": {
+                  "id": 1,
+                  "username": "johndoe",
+                  "password": "johndoe69"
+              },
+              "response": "OK",
+              "errors": [
+                  {
+                      "code": "400 Bad Request",
+                      "description": "Missing id and/or password."
+                  },
+                  {
+                      "code": "404 Not Found",
+                      "description": "Deletion failed. User with given credentials doesn't exist."
+                  },
+                  {
+                      "code": "500 Internal Server Error",
+                      "description": "Internal server error"
+                  }
+              ]
+          }
+      ]
   },
   {
-    "method": "GET",
-    "endpoint": "/pressure/:payload",
-    "description": "Initiates a pressure test on the server. Returns usernames based on the number of payloads.",
-    "requestParameters": [
-      {
-        "name": "isParallel",
-        "description": "Specifies whether to run in parallel (true/false).",
-        "testValue": "true"
-      }
-    ],
-    "response": [{ "username": "sample" }],
-    "errors": [
-      {
-        "code": "400 Bad Request",
-        "description": "Missing or undefined payload."
-      },
-      {
-        "code": "404 Not Found",
-        "description": "User with the provided id not found."
-      },
-      {
-        "code": "500 Internal Server Error",
-        "description": "Internal server error."
-      }
-    ]
-  },
-  {
-    "method": "POST",
-    "endpoint": "/new",
-    "description": "Creates a new user account and returns the generated account id.",
-    "requestBody": {
-      "username": "johndoe",
-      "password": "password"
-    },
-    "response": {
-      "id": 1
-    },
-    "errors": [
-      {
-        "code": "400 Bad Request",
-        "description": "Missing username or password fields."
-      },
-      { "code": "409 Conflict", "description": "Username already exists." },
-      {
-        "code": "500 Internal Server Error",
-        "description": "Internal server error."
-      }
-    ]
-  },
-  {
-    "method": "PATCH",
-    "endpoint": "/edit",
-    "description": "Modifies an account. Requires at least an id. Returns 'OK' on success.",
-    "requestBody": {
-      "id": 1,
-      "username": "johndoe",
-      "password": "johndoe69"
-    },
-    "response": "OK",
-    "errors": [
-      { "code": "400 Bad Request", "description": "Missing id." },
-      {
-        "code": "404 Not Found",
-        "description": "User with the provided id not found."
-      },
-      { "code": "409 Conflict", "description": "Username already exists." },
-      { "code": "409 Conflict", "description": "Password already exists." },
-      {
-        "code": "500 Internal Server Error",
-        "description": "Internal server error."
-      }
-    ]
-  },
-  {
-    "method": "DELETE",
-    "endpoint": "/delete",
-    "description": "Deletes a user account. Returns 'OK' on successful deletion.",
-    "requestBody": {
-      "id": 1,
-      "username": "johndoe",
-      "password": "johndoe69"
-    },
-    "response": "OK",
-    "errors": [
-      {
-        "code": "400 Bad Request",
-        "description": "Missing id and/or password."
-      },
-      {
-        "code": "404 Not Found",
-        "description": "Deletion failed. User with the provided credentials does not exist."
-      },
-      {
-        "code": "500 Internal Server Error",
-        "description": "Internal server error."
-      }
-    ]
+      "group": "Test",
+      "endpoints": [
+          {
+              "method": "GET",
+              "endpoint": "/pressure/:payload",
+              "description": "Initialize a pressure test to the server. This endpoint returns number of usernames depending the number of payloads.",
+              "requestParameters": [
+                  {
+                      "name": "isParallel",
+                      "description": "A boolean value whether to run in parallel or not.",
+                      "testValue": "true"
+                  }
+              ],
+              "response": [{ "username": "sample" }],
+              "errors": [
+                  {
+                      "code": "400 Bad Request",
+                      "description": "Missing or undefined payload"
+                  },
+                  {
+                      "code": "404 Not Found",
+                      "description": "User with given id not found."
+                  },
+                  {
+                      "code": "500 Internal Server Error",
+                      "description": "Internal server error"
+                  }
+              ]
+          }
+      ]
   }
 ]

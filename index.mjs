@@ -1,7 +1,7 @@
 import express from "express";
 import pg from "pg";
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 import {
   TralsePostgreSQL,
@@ -16,8 +16,7 @@ const port = process.env.PORT || 3000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Serve static files from the "public" directory
-app.use(express.static(join(__dirname, 'public')));
-
+app.use(express.static(join(__dirname, "public")));
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -37,14 +36,12 @@ app.get("/username/:id", async (req, res) => {
 
   if (!id) return res.status(400).send({ error: "Missing ID!" });
 
-  const { initializeConnection, query, releaseConnection } = getPostgres(
-    req,
-    DBNAME
-  );
+  let instance;
 
   try {
-    await initializeConnection();
-    const { rows } = await query(
+    instance = getPostgres(req, DBNAME);
+    await instance.initializeConnection();
+    const { rows } = await instance.query(
       `SELECT username FROM my_schema."Accounts" WHERE id=$1`,
       [id]
     );
@@ -56,7 +53,7 @@ app.get("/username/:id", async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: error.message });
   } finally {
-    await releaseConnection();
+    await instance.releaseConnection();
   }
 });
 
@@ -70,11 +67,6 @@ app.get("/pressure/:payload", async (req, res) => {
 
   let count = parseInt(payload);
 
-  const { initializeConnection, query, releaseConnection } = getPostgres(
-    req,
-    DBNAME
-  );
-
   let sql = [];
   let params = [];
 
@@ -83,15 +75,18 @@ app.get("/pressure/:payload", async (req, res) => {
     params.push([id]);
   }
 
+  let instance;
+
   try {
-    await initializeConnection();
+    instance = getPostgres(req, DBNAME);
+    await instance.initializeConnection();
 
     /**
      * @type {pg.QueryResult<any>[]>}
      */
     const result = isParallel
-      ? await query(sql, params, { parallel: true })
-      : await query(sql, params);
+      ? await instance.query(sql, params, { parallel: true })
+      : await instance.query(sql, params);
 
     if (result[0].rowCount === 0)
       res.status(404).send({ error: `Username with id ${id} not found.` });
@@ -102,7 +97,7 @@ app.get("/pressure/:payload", async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: error.message });
   } finally {
-    await releaseConnection();
+    await instance.releaseConnection();
   }
 });
 
@@ -135,6 +130,7 @@ app.post("/new", async (req, res) => {
       );
     } catch (error) {
       if (error.code === "23505") {
+        await transaction.rollback();
         return res.status(409).send({
           error:
             "Duplicate key error: A user with this username already exists.",
@@ -206,8 +202,12 @@ app.patch("/edit", async (req, res) => {
       [[id], params]
     );
 
-    if (result.rowCount === 0)
-      res.status(404).send({ error: `Username with id ${id} not found.` });
+    if (result.rowCount === 0) {
+      await transaction.rollback();
+      return res
+        .status(404)
+        .send({ error: `Username with id ${id} not found.` });
+    }
 
     const { username: u, password: p } = result.rows[0];
 
@@ -280,7 +280,5 @@ process.on("exit", async (code) => {
   await pool.end();
   console.log(`Exited with code ${code}`);
 });
-
-// app.listen(port, () => {console.log("mamamo");})
 
 export default app;

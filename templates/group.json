@@ -1,0 +1,36 @@
+{
+  "group": "Test",
+  "endpoints": [
+    {
+      "method": "GET",
+      "endpoint": "/pressure/:payload",
+      "description": "Initialize a pressure test to the server. This endpoint returns number of usernames depending the number of payloads.",
+      "requestParameters": [
+        {
+          "name": "isParallel",
+          "description": "A boolean value whether to run in parallel or not.",
+          "testValue": "true"
+        }
+      ],
+      "requestBody": {
+        "key1": "value1",
+        "key2": "value2"
+      },
+      "response": [{ "username": "sample" }],
+      "errors": [
+        {
+          "code": "400 Bad Request",
+          "description": "Missing or undefined payload"
+        },
+        {
+          "code": "404 Not Found",
+          "description": "User with given id not found."
+        },
+        {
+          "code": "500 Internal Server Error",
+          "description": "Internal server error"
+        }
+      ]
+    }
+  ]
+}
